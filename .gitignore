@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+checkpoint.pt
+.venv/
+node_modules/

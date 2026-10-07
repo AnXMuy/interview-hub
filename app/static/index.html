@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f4f6f5">
+  <title>手撕 LLM · 学习工作台</title>
+  <link rel="stylesheet" href="/vendor/katex/katex.min.css">
+  <link rel="stylesheet" href="/assets/app.css">
+  <script defer src="/vendor/katex/katex.min.js"></script>
+  <script defer src="/vendor/katex/contrib/auto-render.min.js"></script>
+  <script defer src="/assets/app.js"></script>
+</head>
+<body>
+  <div class="app-shell" id="app">
+    <aside class="sidebar" id="sidebar" aria-label="章节导航">
+      <div class="brand-row">
+        <span class="brand-mark" aria-hidden="true"><span>⌜</span><span>⌟</span></span>
+        <div class="brand-type"><strong>手撕 LLM</strong><small>LOCAL WORKBENCH</small></div>
+        <button class="icon-button mobile-only" id="close-sidebar" title="关闭导航" aria-label="关闭导航"><i data-icon="x"></i></button>
+      </div>
+      <div class="side-scroll">
+        <div class="course-header"><span class="eyebrow">我的学习路径</span><span class="course-count" id="course-count">00 / 11</span></div>
+        <div class="progress-track" aria-label="测评通过进度"><span id="progress-bar"></span></div>
+        <div class="search-field"><i data-icon="search"></i><input id="search" type="search" placeholder="搜索章节或知识点" aria-label="搜索章节或知识点" autocomplete="off"><kbd>/</kbd></div>
+        <div class="nav-label">课程目录 <span id="chapter-count"></span></div>
+        <nav id="course-nav" aria-label="课程目录"></nav>
+      </div>
+      <div class="sidebar-footer"><span class="status-dot"></span>仅在本机运行 <span class="footer-version">PyTorch Lab</span></div>
+    </aside>
+
+    <div class="main-area">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-button sidebar-toggle" id="toggle-sidebar" title="切换目录" aria-label="切换目录"><i data-icon="menu"></i></button>
+          <div class="crumbs"><span id="crumb-module">课程</span><i data-icon="chevron-right"></i><strong id="crumb-page">正在加载</strong></div>
+        </div>
+        <div class="topbar-actions">
+          <span class="offline-badge"><span class="status-dot"></span>本地模式</span>
+          <button class="icon-button desktop-only" id="toggle-editor" title="显示或隐藏练习区" aria-label="显示或隐藏练习区"><i data-icon="panel-right-close"></i></button>
+        </div>
+      </header>
+      <div class="mobile-modes" id="mobile-modes" role="tablist" aria-label="视图"><button class="active" id="show-reader" role="tab" aria-selected="true">阅读</button><button id="show-editor" role="tab" aria-selected="false">练习</button></div>
+      <div class="workspace" id="workspace">
+        <main class="reader" id="reader" tabindex="-1">
+          <div class="reader-inner">
+            <div class="reader-heading"><span class="section-number" id="section-number">01 / 11</span><span class="reader-topic" id="reader-topic">学习资料</span></div>
+            <article id="document" class="markdown-body" aria-live="polite"><div class="loading">正在载入课程…</div></article>
+            <div class="document-pager"><button class="pager-button" id="prev-page" title="上一讲解页" aria-label="上一讲解页"><i data-icon="arrow-left"></i><span>上一页</span></button><span id="page-indicator">讲解 1 / 1</span><button class="pager-button" id="next-page" title="下一讲解页" aria-label="下一讲解页"><span>下一页</span><i data-icon="arrow-right"></i></button></div>
+            <div class="lesson-switcher"><button class="lesson-nav" id="prev-lesson" title="上一个模块" aria-label="上一个模块"><i data-icon="arrow-left"></i></button><span id="lesson-indicator">模块 1 / 1</span><button class="lesson-nav" id="next-lesson" title="下一个模块" aria-label="下一个模块"><i data-icon="arrow-right"></i></button></div>
+          </div>
+        </main>
+        <aside class="workbench" id="workbench" aria-label="代码练习与测评">
+          <div class="workbench-head"><div class="workbench-title"><span class="workbench-icon"><i data-icon="code"></i></span><div><strong>手撕练习</strong><small id="workbench-subtitle">在本机运行</small></div></div><span class="exercise-number" id="exercise-number">01 / 01</span></div>
+          <div class="exercise-meta"><div class="exercise-overline">当前模块 · 独立实现题</div><h2 id="exercise-title">载入中</h2><div class="signature" id="exercise-signature"></div><button id="open-exercise-doc" class="inline-link">回到当前讲解 <i data-icon="arrow-left"></i></button></div>
+          <div class="editor-toolbar"><div class="file-label"><span class="python-mark">Py</span><span id="file-name">solutions/...</span><span class="unsaved-dot" id="unsaved-dot" title="有未保存的修改"></span></div><div class="editor-actions"><button class="icon-button" id="reset-code" title="重新加载磁盘代码" aria-label="重新加载磁盘代码"><i data-icon="rotate-ccw"></i></button><button class="icon-button" id="save-code" title="保存代码 (Ctrl/⌘+S)" aria-label="保存代码"><i data-icon="save"></i></button></div></div>
+          <div class="editor-wrap"><div class="line-numbers" id="line-numbers" aria-hidden="true"></div><textarea id="code-editor" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-label="Python 代码编辑器" placeholder="在这里编写 Python 实现"></textarea></div>
+          <div class="runbar"><span id="save-status" role="status">代码只保存在本机</span><button class="run-button" id="run-code"><i data-icon="play"></i><span>运行测评</span></button></div>
+          <section class="results" aria-label="测评结果"><div class="results-heading"><div><i data-icon="terminal"></i><strong>测评结果</strong></div><span id="result-badge" class="result-badge idle">等待运行</span></div><pre id="result-output" aria-live="polite">完成代码后运行测评，结果会显示在这里。</pre></section>
+        </aside>
+      </div>
+    </div>
+  </div>
+  <div class="toast" role="status" id="toast"></div>
+</body>
+</html>

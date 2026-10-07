@@ -1,0 +1,5 @@
+fastapi>=0.110,<1
+uvicorn>=0.27,<1
+markdown-it-py>=3,<5
+torch>=2.2
+numpy>=1.26

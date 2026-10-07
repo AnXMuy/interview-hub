@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "name": "llm-code-study-workbench",
+  "version": "1.0.0",
+  "description": "Local-only visual assets for the offline study workbench",
+  "dependencies": {
+    "katex": "^0.16.22",
+    "lucide-static": "^0.468.0"
+  }
+}
