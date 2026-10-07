@@ -1,7 +1,7 @@
 (() => {
   const state = {
-    catalog: [], module: null, page: null, lessonPages: [], lessonIndex: 0,
-    explainIndex: 0, exercise: null, savedCode: '',
+    catalog: [], module: null, page: null, lessonIndex: 0,
+    exercise: null, savedCode: '',
     passed: new Set(JSON.parse(localStorage.getItem('llm-passed-lessons') || '[]')),
   };
   const $ = (id) => document.getElementById(id);
@@ -37,36 +37,23 @@
     $('course-count').textContent = `${String(done).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
   }
 
-  function splitExplanation() {
-    const article = $('document');
-    const blocks = [...article.children];
-    const pages = []; let current = [];
-    blocks.forEach((block) => {
-      if (/^H[12]$/.test(block.tagName) && current.length) { pages.push(current); current = []; }
-      current.push(block);
-    });
-    if (current.length) pages.push(current);
-    state.lessonPages = pages.length ? pages : [[...blocks]];
-    state.explainIndex = 0;
-    showExplanation();
-  }
-
-  function showExplanation() {
-    const article = $('document');
-    [...article.children].forEach((child) => { child.hidden = true; });
-    (state.lessonPages[state.explainIndex] || []).forEach((child) => { child.hidden = false; });
-    $('page-indicator').textContent = `讲解 ${state.explainIndex + 1} / ${state.lessonPages.length}`;
-    $('prev-page').disabled = state.explainIndex === 0;
-    $('next-page').disabled = state.explainIndex === state.lessonPages.length - 1;
-  }
-
   async function loadDocument(module, page) {
     const response = await fetch(`/api/document/${module}/${page}`);
     if (!response.ok) throw new Error('无法载入文档');
     $('document').innerHTML = (await response.json()).html;
     if (window.renderMathInElement) renderMathInElement($('document'), { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '\\[', right: '\\]', display: true }, { left: '$', right: '$', display: false }, { left: '\\(', right: '\\)', display: false }], throwOnError: false });
     $('document').querySelectorAll('a[href^="#/"]').forEach((link) => link.addEventListener('click', (event) => { event.preventDefault(); navigate(link.getAttribute('href').slice(2)); }));
-    splitExplanation();
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+  }
+
+  function renderExercisePrompt(spec) {
+    const tasks = (spec?.tasks || []).map((task) => `<li>${escapeHtml(task)}</li>`).join('');
+    $('exercise-prompt').innerHTML = `<div class="prompt-block"><strong>输入</strong><p>${escapeHtml(spec?.input)}</p></div>`
+      + `<div class="prompt-block"><strong>输出</strong><p>${escapeHtml(spec?.output)}</p></div>`
+      + `<div class="prompt-block"><strong>任务</strong><ul>${tasks}</ul></div>`;
   }
 
   async function loadExercise(module, page) {
@@ -74,6 +61,7 @@
     if (!response.ok) throw new Error('无法载入练习');
     const data = await response.json(); state.exercise = data; state.savedCode = data.code;
     $('code-editor').value = data.code; $('file-name').textContent = data.file; $('exercise-title').textContent = data.name; $('exercise-signature').textContent = data.signature;
+    renderExercisePrompt(data.spec);
     $('exercise-number').textContent = `${state.lessonIndex + 1} / ${String(moduleOf(module).pages.length).padStart(2, '0')}`;
     $('section-number').textContent = `${lessonNumber()} / ${String(state.catalog.length).padStart(2, '0')}`;
     $('workbench-subtitle').textContent = data.legacy ? '精确测评 · 只修改当前接口' : '独立练习 · 可导入检查';
@@ -95,7 +83,6 @@
     $('lesson-indicator').textContent = `模块 ${state.lessonIndex + 1} / ${mod.pages.length}`; $('prev-lesson').disabled = first; $('next-lesson').disabled = last;
   }
   function moveLesson(delta) { const mod = moduleOf(state.module); const next = mod.pages[state.lessonIndex + delta]; if (next) navigate(`${state.module}/${next.id}`); }
-  function moveExplanation(delta) { const next = state.explainIndex + delta; if (next >= 0 && next < state.lessonPages.length) { state.explainIndex = next; showExplanation(); } }
   function updateLineNumbers() { $('line-numbers').innerHTML = $('code-editor').value.split('\n').map((_, index) => `<div>${index + 1}</div>`).join(''); }
   function setDirty(dirty) { $('unsaved-dot').classList.toggle('show', dirty); $('save-status').textContent = dirty ? '有未保存的修改' : '代码只保存在本机'; }
   function setResult(kind, label, output) { $('result-badge').textContent = label; $('result-badge').className = `result-badge ${kind}`; $('result-output').textContent = output; }
@@ -119,7 +106,7 @@
     renderIcons(); const response = await fetch('/api/catalog'); state.catalog = (await response.json()).modules;
     const [hashModule, hashPage] = location.hash.replace(/^#\/?/, '').split('/'); const first = state.catalog[0]; const mod = moduleOf(hashModule) || first; await navigate(`${mod.id}/${hashPage || mod.pages[0].id}`, true);
     $('search').addEventListener('input', (event) => renderNav(event.target.value)); $('toggle-sidebar').onclick = () => $('sidebar').classList.toggle('open'); $('close-sidebar').onclick = () => $('sidebar').classList.remove('open');
-    $('prev-page').onclick = () => moveExplanation(-1); $('next-page').onclick = () => moveExplanation(1); $('prev-lesson').onclick = () => moveLesson(-1); $('next-lesson').onclick = () => moveLesson(1);
+    $('prev-lesson').onclick = () => moveLesson(-1); $('next-lesson').onclick = () => moveLesson(1);
     $('toggle-editor').onclick = () => { const hidden = $('workbench').style.display === 'none'; $('workbench').style.display = hidden ? '' : 'none'; $('toggle-editor').innerHTML = icon(hidden ? 'panel-right-close' : 'panel-right-open'); };
     $('show-reader').onclick = () => { $('workspace').classList.remove('editor-view'); $('show-reader').classList.add('active'); $('show-editor').classList.remove('active'); }; $('show-editor').onclick = () => { $('workspace').classList.add('editor-view'); $('show-editor').classList.add('active'); $('show-reader').classList.remove('active'); };
     $('code-editor').addEventListener('input', () => { updateLineNumbers(); setDirty($('code-editor').value !== state.savedCode); }); $('code-editor').addEventListener('scroll', () => { $('line-numbers').scrollTop = $('code-editor').scrollTop; }); $('code-editor').addEventListener('keydown', (event) => { if (event.key === 'Tab') { event.preventDefault(); const start = event.target.selectionStart; event.target.value = event.target.value.slice(0, start) + '    ' + event.target.value.slice(event.target.selectionEnd); event.target.selectionStart = event.target.selectionEnd = start + 4; updateLineNumbers(); setDirty(true); } });

@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 from playwright.sync_api import sync_playwright
 
@@ -7,12 +8,15 @@ def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page(viewport={"width": 1440, "height": 900})
-        page.goto("http://127.0.0.1:8765")
+        page.goto(os.getenv("WORKBENCH_URL", "http://127.0.0.1:8765"))
         page.wait_for_load_state("networkidle")
         assert page.locator("#document h1").count() == 1
         assert page.locator("#course-nav .module").count() == 11
         assert page.locator("#course-nav .page-link").count() == 55
         assert page.locator("#code-editor").input_value().startswith('import torch')
+        assert page.evaluate("document.documentElement.scrollHeight === window.innerHeight")
+        assert page.locator(".markdown-body").evaluate("e => getComputedStyle(e).overflowY") == "auto"
+        assert all(label in page.locator("#exercise-prompt").inner_text() for label in ("输入", "输出", "任务"))
         page.screenshot(path="/tmp/llm-workbench.png", full_page=True)
         page.locator("details[data-module='01-attention'] > summary").click()
         page.locator("a[href='#/01-attention/scaled-dot-product-attention']").click()
@@ -26,11 +30,8 @@ def main():
         page.locator("#prev-lesson").click()
         page.wait_for_timeout(250)
         assert page.locator("#crumb-page").inner_text() == "Scaled Dot-Product Attention"
-        explanation_count = int(page.locator("#page-indicator").inner_text().split("/")[1])
-        if explanation_count > 1:
-            page.locator("#next-page").click()
-            page.wait_for_timeout(100)
-            assert page.locator("#page-indicator").inner_text().startswith("讲解 2 /")
+        assert page.locator("#page-indicator").count() == 0
+        assert page.locator("#document h2").count() >= 1
         page.locator("#run-code").click()
         page.wait_for_timeout(3000)
         print("badge=", page.locator("#result-badge").inner_text(), "output=", page.locator("#result-output").inner_text()[:200])

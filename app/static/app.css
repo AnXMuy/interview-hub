@@ -41,3 +41,29 @@ button { border: 0; }
 img { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; }
 @media (max-width: 1040px) { .sidebar { width: 240px; flex-basis: 240px; }.workbench { width: 390px; flex-basis: 390px; }.reader-inner { padding-left: 38px; padding-right: 38px; } }
 @media (max-width: 800px) { .sidebar { position: fixed; z-index: 10; inset: 0 auto 0 0; width: 286px; transform: translateX(-102%); transition: transform .2s ease; box-shadow: 12px 0 30px rgba(25,45,39,.12); }.sidebar.open { transform: translateX(0); }.sidebar .mobile-only { display: inline-flex; margin-left: auto; }.sidebar-toggle { display: inline-flex; }.desktop-only { display: none; }.topbar { padding: 0 16px; height: 62px; flex-basis: 62px; }.workspace { display: block; overflow: hidden; }.reader, .workbench { width: 100%; height: calc(100vh - 104px); border: 0; }.reader-inner { padding: 28px 23px 60px; }.workbench { display: none; }.mobile-modes { display: flex; height: 42px; padding: 5px; background: #e9efec; border-bottom: 1px solid var(--line); }.mobile-modes button { flex: 1; background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; }.mobile-modes button.active { background: white; color: var(--green-dark); font-weight: 700; box-shadow: 0 1px 4px rgba(25,45,39,.08); }.workspace.editor-view .reader { display: none; }.workspace.editor-view .workbench { display: flex; }.workspace.editor-view .workbench { height: calc(100vh - 104px); }.markdown-body h1 { font-size: 27px; } }
+
+/* Fixed application viewport: each pane owns its own scrolling surface. */
+html, body { height: 100%; min-height: 0; overflow: hidden; }
+.app-shell { height: 100vh; min-height: 0; overflow: hidden; }
+.main-area { height: 100vh; min-height: 0; overflow: hidden; }
+.workspace { height: calc(100vh - 76px); min-height: 0; }
+.sidebar { height: 100vh; min-height: 0; overflow: hidden; }
+.side-scroll { min-height: 0; overflow-y: auto; overflow-x: hidden; }
+.reader { min-height: 0; }
+.reader-inner { min-height: 0; }
+.markdown-body { overflow-y: auto; overflow-x: hidden; padding-right: 10px; }
+.workbench { min-height: 0; height: 100%; overflow: hidden; }
+.exercise-meta { min-height: 0; max-height: 32%; overflow-y: auto; }
+.exercise-prompt { margin-top: 14px; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.exercise-prompt .prompt-block { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 8px; }
+.exercise-prompt strong { color: var(--green-dark); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+.exercise-prompt p { margin: 4px 0 0; }
+.exercise-prompt ul { margin: 4px 0 0; padding-left: 17px; }
+.exercise-prompt li { margin: 2px 0; }
+
+@media (max-width: 800px) {
+  .workspace { height: calc(100vh - 104px); }
+  .reader, .workbench { height: 100%; min-height: 0; }
+  .reader-inner { min-height: 0; }
+  .workbench { overflow: hidden; }
+}

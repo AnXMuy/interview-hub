@@ -1,5 +1,6 @@
-"""本模块独立练习：保留一个函数或类的实现，不要修改接口。"""
+"""按当前模块题目实现函数接口；不要改动函数名和参数。"""
 
-def solve(*args, **kwargs):
-    """请根据对应 Markdown 完成核心逻辑。"""
+import torch
+
+def multi_head_attention(x, num_heads, q_proj, k_proj, v_proj, out_proj):
     raise NotImplementedError

@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from pathlib import Path
 import re
 
+from .exercise_specs import get_spec
+
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / 'docs'
 SOLUTIONS = ROOT / 'solutions'
@@ -54,14 +56,16 @@ def catalog():
 
 
 def exercise_payload(exercise, module, filename, label):
-    if exercise:
-        return {'id': f'{module}/{filename.removesuffix(".md")}', 'name': exercise.name,
-                'signature': exercise.signature, 'file': 'solutions/' + exercise.file,
-                'page': filename.removesuffix('.md'), 'legacy': True}
     slug = filename.removesuffix('.md')
-    return {'id': f'{module}/{slug}', 'name': f'{label} 实现题',
-            'signature': f'请在 solutions/pages/{module}__{slug}.py 完成该模块的核心接口',
-            'file': f'solutions/pages/{module}__{slug}.py', 'page': slug, 'legacy': False}
+    spec = get_spec(module, slug, label)
+    if exercise:
+        return {'id': f'{module}/{slug}', 'name': spec['name'],
+                'signature': spec['signature'], 'file': 'solutions/' + exercise.file,
+                'page': slug, 'legacy': True, 'spec': spec}
+    return {'id': f'{module}/{slug}', 'name': spec['name'],
+            'signature': spec['signature'],
+            'file': f'solutions/pages/{module}__{slug}.py', 'page': slug,
+            'legacy': False, 'spec': spec}
 
 
 def get_exercise(module, page):

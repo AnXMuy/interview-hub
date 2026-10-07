@@ -54,7 +54,19 @@ def resolve_page(module: str, page: str) -> Path:
 
 def render_document(source: Path) -> str:
     # Resolve links to other local docs into internal routes; no remote scripts or HTML.
-    tokens = MARKDOWN.parse(source.read_text(encoding='utf-8'))
+    text = source.read_text(encoding='utf-8')
+    module = source.parent.name
+    page = source.stem
+    exercise = get_exercise(module, page)
+    if exercise:
+        spec = exercise['spec']
+        text += '\n\n## 本模块面试题\n\n'
+        text += f"**题目：** {spec['name']}\n\n"
+        text += f"**接口：** `{spec['signature']}`\n\n"
+        text += f"**输入：** {spec['input']}\n\n"
+        text += f"**输出：** {spec['output']}\n\n"
+        text += '**具体要求：**\n\n' + '\n'.join(f'- {item}' for item in spec['tasks'])
+    tokens = MARKDOWN.parse(text)
     for token in tokens:
         if token.type != 'inline' or not token.children:
             continue
@@ -84,15 +96,43 @@ def get_document(module: str, page: str):
     return {'html': render_document(resolve_page(module, page))}
 
 
+def starter_code(spec):
+    signature = spec['signature']
+    if signature.startswith('class '):
+        match = re.match(r'class\s+(\w+).*?:\s*(\w+)\((.*?)\)', signature)
+        if not match:
+            return '"""请根据题目实现类接口。"""\n\nraise NotImplementedError\n'
+        class_name, init_name, args = match.groups()
+        args = args.replace('...', '1e-3')
+        cache_class = init_name in {'append', 'reset'}
+        methods = ''
+        if cache_class:
+            methods = ('\n    def append(self, k, v):\n'
+                       '        raise NotImplementedError\n\n'
+                       '    def reset(self):\n'
+                       '        raise NotImplementedError\n')
+        else:
+            methods = ('\n    def forward(self, x, *args, **kwargs):\n'
+                       '        raise NotImplementedError\n')
+        init_block = ('    def __init__(self):\n        super().__init__()\n'
+                      if cache_class else
+                      f'    def __init__(self, {args}):\n        super().__init__()\n        raise NotImplementedError\n')
+        return ("\"\"\"按当前模块题目实现接口；保留类名和方法签名。\"\"\"\n\n"
+                'import torch\nfrom torch import nn\n\n'
+                f'class {class_name}(nn.Module):\n'
+                + init_block + methods)
+    signature = signature.split(' -> ', 1)[0].replace('...', '1e-3')
+    return ("\"\"\"按当前模块题目实现函数接口；不要改动函数名和参数。\"\"\"\n\n"
+            'import torch\n\n'
+            f'def {signature}:\n'
+            '    raise NotImplementedError\n')
+
+
 def solution_path(exercise):
     path = SOLUTIONS / exercise['file'].removeprefix('solutions/')
     if not path.exists() and not exercise.get('legacy'):
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(
-            '"""本模块独立练习：保留一个函数或类的实现，不要修改接口。"""\n\n'
-            'def solve(*args, **kwargs):\n'
-            '    """请根据对应 Markdown 完成核心逻辑。"""\n'
-            '    raise NotImplementedError\n', encoding='utf-8')
+        path.write_text(starter_code(exercise['spec']), encoding='utf-8')
     return path
 
 
@@ -105,7 +145,7 @@ def get_page_exercise(module: str, page: str, request: Request):
     path = solution_path(exercise)
     return {'code': path.read_text(encoding='utf-8'), 'file': exercise['file'],
             'signature': exercise['signature'], 'name': exercise['name'],
-            'legacy': exercise.get('legacy', False)}
+            'legacy': exercise.get('legacy', False), 'spec': exercise['spec']}
 
 
 @app.put('/api/exercise/{module}/{page}')

@@ -91,7 +91,7 @@ def top_k_sampling_simple(logits: torch.Tensor, k: int) -> torch.Tensor:
 
 ## 动手练习
 
-本节先用原文示例复现概念；本章的自动测评题在 [top-p](top-p.md)，只需实现该题对应的一个接口。
+本模块的具体实现题会显示在网页右侧；题面明确函数或类接口、输入、输出、边界条件和具体任务。
 
 ## 常见面试问答
 

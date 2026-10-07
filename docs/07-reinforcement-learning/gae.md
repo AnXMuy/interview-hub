@@ -106,7 +106,7 @@ def compute_gae_vectorized(
 
 ## 动手练习
 
-本题的单接口练习见 [练习契约](../../grader/README.md)；仅编辑 `solutions/reinforcement_learning.py`，运行 `python -m grader 07-reinforcement-learning`。原文代码为学习示例，测评以练习契约为准。
+本模块的具体实现题会显示在网页右侧；题面明确函数或类接口、输入、输出、边界条件和具体任务。网页保存后可直接运行本模块的本地测评。
 
 ## 常见面试问答
 
